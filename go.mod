@@ -1,6 +1,7 @@
 module github.com/ipfs/go-bitswap
 
 require (
+	github.com/Matias-Correia/go-test_server/server v0.0.0-20210929183858-9f8dded63c79
 	github.com/benbjohnson/clock v1.1.0
 	github.com/cskr/pubsub v1.0.2
 	github.com/gogo/protobuf v1.3.2
@@ -29,9 +30,9 @@ require (
 	github.com/multiformats/go-multiaddr v0.3.3
 	github.com/multiformats/go-multistream v0.2.2
 	github.com/stretchr/testify v1.7.0
-	go.uber.org/zap v1.16.0
-	google.golang.org/grpc v1.33.2 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
+	go.uber.org/zap v1.17.0
+	google.golang.org/grpc v1.39.0
+	google.golang.org/protobuf v1.27.1
 )
 
 go 1.16
