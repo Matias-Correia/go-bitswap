@@ -23,6 +23,10 @@ import (
 	msgio "github.com/libp2p/go-msgio"
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multistream"
+
+	"google.golang.org/grpc"
+	pb "github.com/Matias-Correia/go-test_server/server/protologs"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var log = logging.Logger("bitswap_network")
