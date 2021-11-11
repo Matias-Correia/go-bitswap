@@ -8,6 +8,7 @@ import (
 	bsgetter "github.com/ipfs/go-bitswap/internal/getter"
 	notifications "github.com/ipfs/go-bitswap/internal/notifications"
 	bspm "github.com/ipfs/go-bitswap/internal/peermanager"
+	bsnet "github.com/ipfs/go-bitswap/network"
 	bssim "github.com/ipfs/go-bitswap/internal/sessioninterestmanager"
 	blocks "github.com/ipfs/go-block-format"
 	cid "github.com/ipfs/go-cid"
@@ -129,6 +130,11 @@ type Session struct {
 	notif notifications.PubSub
 	uuid  logging.Loggable
 	id    uint64
+	//Changes made to BitSwap
+	network 				bsnet.BitSwapNetwork	
+	providerSMode 			int
+	serveraddr	 			string
+	sessionAvgThreshold		time.Duration
 
 	self peer.ID
 }
@@ -147,6 +153,10 @@ func New(
 	notif notifications.PubSub,
 	initialSearchDelay time.Duration,
 	periodicSearchDelay delay.D,
+	network bsnet.BitSwapNetwork,
+	providerSelectionMode int,
+	serverAddress string,
+	sessionavglatthreshold time.Duration,
 	self peer.ID) *Session {
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -168,10 +178,14 @@ func New(
 		id:                  id,
 		initialSearchDelay:  initialSearchDelay,
 		periodicSearchDelay: periodicSearchDelay,
+		network:             network,
+		providerSMode:		 providerSelectionMode
+		serveraddr:			 serverAddress
+		sessionAvgThreshold: sessionavglatthreshold	
 		self:                self,
 	}
-	s.sws = newSessionWantSender(id, pm, sprm, sm, bpm, s.onWantsSent, s.onPeersExhausted)
-
+	s.sws = newSessionWantSender(id, pm, sprm, sm, bpm, s.onWantsSent, s.onPeersExhausted, network, providerSelectionMode)
+	
 	go s.run(ctx)
 
 	return s
@@ -201,6 +215,24 @@ func (s *Session) ReceiveFrom(from peer.ID, ks []cid.Cid, haves []cid.Cid, dontH
 
 	if len(ks) == 0 {
 		return
+	}
+
+	// Set up a connection to the server.
+	conn, err := grpc.Dial(s.serveraddr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	c := pb.NewLogTestDataClient(conn)
+
+	for _, d := range ks {
+		// Contact the server and print out its response.
+		ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: d.String(), Localpeer: from, Remotepeer: s.self, SentAt: nil, ReceivedAt:timestamppb.Now(), BlockRequestedAt:nil, Duplicate: false})
+		if err != nil {
+			log.Fatalf("could not greet: %v", err)
+		}
 	}
 
 	// Inform the session that blocks have been received
@@ -422,6 +454,13 @@ func (s *Session) handleReceive(ks []cid.Cid) {
 
 	// Record latency
 	s.latencyTrkr.receiveUpdate(len(wanted), totalLatency)
+
+	//If Average Latency goes bellow or above the threshold notify SessionWantSender
+	if s.latencyTrkr.averageLatency() > s.sessionAvgThreshold{
+		s.sws.triggerThreshold()
+	}else{
+		s.sws.unTriggerThreshold()
+	}
 
 	// Inform the SessionInterestManager that this session is no longer
 	// expecting to receive the wanted keys

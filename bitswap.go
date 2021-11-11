@@ -124,6 +124,23 @@ func MaxOutstandingBytesPerPeer(count int) Option {
 	}
 }
 
+// ProviderSelectionMode sets the way BitSwap chooses the provider for a specific block 
+// Setting it to 1 will make BitSwap operate in his standart mode 
+// Setting it to 2 will choose providers with the least latency
+// Setting it to 3 will choose providers with the least latency without randomization 
+//func ProviderSelectionMode(mode int) Option {
+//	return func(bs *Bitswap) {
+//		bs.providerSelectionMode = mode
+//	}
+//}
+
+//ServerAddress provides the address of the server who receives the logs
+//func ServerAddress(addr string) Option {
+//	return func(bs *Bitswap) {
+//		bs.logServerAddress = addr
+//	}
+//}
+
 // SetSendDontHaves indicates what to do when the engine receives a want-block
 // for a block that is not in the blockstore. Either
 // - Send a DONT_HAVE message
@@ -162,7 +179,7 @@ func WithTaskComparator(comparator TaskComparator) Option {
 // BitSwapNetwork. This function registers the returned instance as the network
 // delegate. Runs until context is cancelled or bitswap.Close is called.
 func New(parent context.Context, network bsnet.BitSwapNetwork,
-	bstore blockstore.Blockstore, options ...Option) exchange.Interface {
+	bstore blockstore.Blockstore, providerSelection int, serverAddress string, sessionavglatthreshold time.Duration, options ...Option) exchange.Interface {
 
 	// important to use provided parent context (since it may include important
 	// loggable data). It's probably not a good idea to allow bitswap to be
@@ -228,7 +245,7 @@ func New(parent context.Context, network bsnet.BitSwapNetwork,
 		provSearchDelay time.Duration,
 		rebroadcastDelay delay.D,
 		self peer.ID) bssm.Session {
-		return bssession.New(sessctx, sessmgr, id, spm, pqm, sim, pm, bpm, notif, provSearchDelay, rebroadcastDelay, self)
+		return bssession.New(sessctx, sessmgr, id, spm, pqm, sim, pm, bpm, notif, provSearchDelay, rebroadcastDelay, network, providerSelection, serverAddress, sessionavglatthreshold, self)
 	}
 	sessionPeerManagerFactory := func(ctx context.Context, id uint64) bssession.SessionPeerManager {
 		return bsspm.New(id, network.ConnectionManager())
@@ -259,6 +276,8 @@ func New(parent context.Context, network bsnet.BitSwapNetwork,
 		engineTaskWorkerCount:            defaults.BitswapEngineTaskWorkerCount,
 		taskWorkerCount:                  defaults.BitswapTaskWorkerCount,
 		engineMaxOutstandingBytesPerPeer: defaults.BitswapMaxOutstandingBytesPerPeer,
+		providerSelectionMode:			  providerSelection,
+		logServerAddress:                 serverAddress,
 		engineSetSendDontHaves:           true,
 		simulateDontHavesOnTimeout:       true,
 	}
@@ -375,6 +394,12 @@ type Bitswap struct {
 
 	// the total amount of bytes that a peer should have outstanding, it is utilized by the decision engine
 	engineMaxOutstandingBytesPerPeer int
+
+	// the way Bitswap selects the next providers for a block
+	providerSelectionMode int
+
+	// the server to send the logs to
+	logServerAddress string
 
 	// the score ledger used by the decision engine
 	engineScoreLedger deciface.ScoreLedger

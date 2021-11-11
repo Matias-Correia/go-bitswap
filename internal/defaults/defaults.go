@@ -17,4 +17,8 @@ const (
 	BitswapEngineTaskWorkerCount = 8
 	// the total amount of bytes that a peer should have outstanding, it is utilized by the decision engine
 	BitswapMaxOutstandingBytesPerPeer = 1 << 20
+	// chooses the method of selecting the providers for a specific block
+	BitswapProviderSelectionMode = 1
+	// default server Address to send the logs
+	BitswapServerAddress = "localhost:50051"
 )

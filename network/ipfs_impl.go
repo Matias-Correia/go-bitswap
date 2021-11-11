@@ -341,6 +341,39 @@ func (bsnet *impl) SendMessage(
 		_ = s.Reset()
 		return err
 	}
+	senderID := impl.host.ID()
+
+	// Set up a connection to the server.
+	conn, err := grpc.Dial(s.serveraddr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	c := pb.NewLogTestDataClient(conn)
+
+	if outgoing.Wantlist() != nil {
+		for _, wantentry := range outgoing.Wantlist() {
+			blockcRequested := wantentry.Cid
+			// Contact the server and print out its response.
+			ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: blockRequested.String(), Localpeer: senderID, Remotepeer: p, SentAt: nil, ReceivedAt:nil, BlockRequestedAt:timestamppb.Now(), Duplicate: false})
+			if err != nil {
+				log.Fatalf("could not greet: %v", err)
+			}
+		}
+	}else if outgoing.Blocks() != nil{
+		for _, block := range outgoing.Blocks() {
+			blockRequested := block.Cid()
+			// Contact the server and print out its response.
+			ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: blockRequested.String(), Localpeer: from, Remotepeer: p, SentAt: timestamppb.Now(), ReceivedAt:nil, BlockRequestedAt:nil, Duplicate: false})
+			if err != nil {
+				log.Fatalf("could not greet: %v", err)
+			}
+		}
+	}
 
 	return s.Close()
 }

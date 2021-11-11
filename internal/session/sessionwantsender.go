@@ -4,6 +4,7 @@ import (
 	"context"
 
 	bsbpm "github.com/ipfs/go-bitswap/internal/blockpresencemanager"
+	bsnet "github.com/ipfs/go-bitswap/network"
 
 	cid "github.com/ipfs/go-cid"
 	peer "github.com/libp2p/go-libp2p-core/peer"
@@ -110,10 +111,12 @@ type sessionWantSender struct {
 	onSend onSendFn
 	// Called when all peers explicitly don't have a block
 	onPeersExhausted onPeersExhaustedFn
+	//This boolean indicates whether or not the session average latency is above the threshold
+	latencyThreshold bool
 }
 
 func newSessionWantSender(sid uint64, pm PeerManager, spm SessionPeerManager, canceller SessionWantsCanceller,
-	bpm *bsbpm.BlockPresenceManager, onSend onSendFn, onPeersExhausted onPeersExhaustedFn) sessionWantSender {
+	bpm *bsbpm.BlockPresenceManager, onSend onSendFn, onPeersExhausted onPeersExhaustedFn, network bsnet.BitSwapNetwork, providerSelectionMode int) sessionWantSender {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	sws := sessionWantSender{
@@ -125,7 +128,7 @@ func newSessionWantSender(sid uint64, pm PeerManager, spm SessionPeerManager, ca
 		wants:                    make(map[cid.Cid]*wantInfo),
 		peerConsecutiveDontHaves: make(map[peer.ID]int),
 		swbt:                     newSentWantBlocksTracker(),
-		peerRspTrkr:              newPeerResponseTracker(),
+		peerRspTrkr:              newPeerResponseTracker(network, providerSelectionMode),
 
 		pm:               pm,
 		spm:              spm,
@@ -133,9 +136,19 @@ func newSessionWantSender(sid uint64, pm PeerManager, spm SessionPeerManager, ca
 		bpm:              bpm,
 		onSend:           onSend,
 		onPeersExhausted: onPeersExhausted,
+		latencyThreshold: false,
 	}
 
 	return sws
+}
+
+//TriggerThreshold and UnTriggerThreshold are called by the Session whenever the average latency is above or below the threshold.
+func (sws *sessionWantSender) triggerThreshold() {
+	sws.latencyThreshold = true
+}
+
+func (sws *sessionWantSender) unTriggerThreshold() {
+	sws.latencyThreshold = false
 }
 
 func (sws *sessionWantSender) ID() uint64 {
@@ -635,12 +648,12 @@ func (sws *sessionWantSender) removeWant(c cid.Cid) *wantInfo {
 
 // updateWantsPeerAvailability is called when the availability changes for a
 // peer. It updates all the wants accordingly.
-func (sws *sessionWantSender) updateWantsPeerAvailability(p peer.ID, isNowAvailable bool) {
+func (sws *sessionWantSender) updateWantsPeerAvailability(p peer.ID, isNowAvailable bool,) {
 	for c, wi := range sws.wants {
 		if isNowAvailable {
 			sws.updateWantBlockPresence(c, p)
 		} else {
-			wi.removePeer(p)
+			wi.removePeer(p,sws.latencyThreshold)
 		}
 	}
 }
@@ -656,11 +669,11 @@ func (sws *sessionWantSender) updateWantBlockPresence(c cid.Cid, p peer.ID) {
 	// If the peer sent us a HAVE or DONT_HAVE for the cid, adjust the
 	// block presence for the peer / cid combination
 	if sws.bpm.PeerHasBlock(p, c) {
-		wi.setPeerBlockPresence(p, BPHave)
+		wi.setPeerBlockPresence(p, BPHave, sws.latencyThreshold)
 	} else if sws.bpm.PeerDoesNotHaveBlock(p, c) {
-		wi.setPeerBlockPresence(p, BPDontHave)
+		wi.setPeerBlockPresence(p, BPDontHave, sws.latencyThreshold)
 	} else {
-		wi.setPeerBlockPresence(p, BPUnknown)
+		wi.setPeerBlockPresence(p, BPUnknown, sws.latencyThreshold)
 	}
 }
 
@@ -704,9 +717,9 @@ func newWantInfo(prt *peerResponseTracker) *wantInfo {
 }
 
 // setPeerBlockPresence sets the block presence for the given peer
-func (wi *wantInfo) setPeerBlockPresence(p peer.ID, bp BlockPresence) {
+func (wi *wantInfo) setPeerBlockPresence(p peer.ID, bp BlockPresence, latThreshold bool) {
 	wi.blockPresence[p] = bp
-	wi.calculateBestPeer()
+	wi.calculateBestPeer(latThreshold)
 
 	// If a peer informed us that it has a block then make sure the want is no
 	// longer flagged as exhausted (exhausted means no peers have the block)
@@ -727,7 +740,7 @@ func (wi *wantInfo) removePeer(p peer.ID) {
 }
 
 // calculateBestPeer finds the best peer to send the want to next
-func (wi *wantInfo) calculateBestPeer() {
+func (wi *wantInfo) calculateBestPeer(latThreshold bool) {
 	// Recalculate the best peer
 	bestBP := BPDontHave
 	bestPeer := peer.ID("")
@@ -764,5 +777,5 @@ func (wi *wantInfo) calculateBestPeer() {
 			peersWithBest = append(peersWithBest, p)
 		}
 	}
-	wi.bestPeer = wi.peerRspTrkr.choose(peersWithBest)
+	wi.bestPeer = wi.peerRspTrkr.choose(peersWithBest, latThreshold)
 }
