@@ -41,50 +41,50 @@ func (prt *peerResponseTracker) choose(peers []peer.ID, sessionAvgLatThreshold b
 	// If the provider mode is set to 2 in the config file then choose
 	// selects the closest peers using the same randomization method
 	//than default BitSwap
-	if providerSMode == 2{
-		return chooseClosest(peers)
+	if prt.providerSMode == 2{
+		return prt.chooseClosest(peers)
 	
 	// If the provider mode is set to 3 in the config file then choose
 	// operates like in default BitSwap but once the session latency
 	// threshold is reached it select the closest peer up to a maximum
 	// of 4 times consecutively
-	}else if providerSMode == 3{
+	}else if prt.providerSMode == 3{
 		if sessionAvgLatThreshold == true{
-			closestPeer = leastLatencyPeer(peers)
+			closestPeer = prt.leastLatencyPeer(peers)
 			if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries < 4) {
 				prt.successiveQueries ++
 				return closestPeer
 			}else if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries >= 4){
-				nextLeastLatencyPeer(peers,closestPeer)
+				prt.nextLeastLatencyPeer(peers,closestPeer)
 			}else{
 				prt.closestPeerQueried = closestPeer
 				prt.successiveQueries = 1
 				return closestPeer
 			}
 		}else{
-			return chooseDefault(peers)
+			return prt.chooseDefault(peers)
 		}
 	// If the provider mode is set to 3 in the config file then choose
 	// operates like in mode 3 althought whenever the session latency
 	// average is below the threshold it chooses like in mode 2	
 	}else if providerSMode == 4{
 		if sessionAvgLatThreshold == true{
-			closestPeer = leastLatencyPeer(peers)
+			closestPeer = prt.leastLatencyPeer(peers)
 			if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries < 4) {
 				prt.successiveQueries ++
 				return closestPeer
 			}else if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries >= 4){
-				nextLeastLatencyPeer(peers,closestPeer)
+				prt.nextLeastLatencyPeer(peers,closestPeer)
 			}else{
 				prt.closestPeerQueried = closestPeer
 				prt.successiveQueries = 1
 				return closestPeer
 			}
 		}else{
-			return chooseClosest(peers)
+			return prt.chooseClosest(peers)
 		}
 	}else{
-		return chooseDefault(peers)
+		return prt.chooseDefault(peers)
 	}
 }
 
