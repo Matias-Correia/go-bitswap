@@ -183,9 +183,9 @@ func New(
 		initialSearchDelay:  initialSearchDelay,
 		periodicSearchDelay: periodicSearchDelay,
 		network:             network,
-		providerSMode:		 providerSelectionMode
-		serveraddr:			 serverAddress
-		sessionAvgThreshold: sessionavglatthreshold	
+		providerSMode:		 providerSelectionMode,
+		serveraddr:			 serverAddress,
+		sessionAvgThreshold: sessionavglatthreshold,
 		self:                self,
 	}
 	s.sws = newSessionWantSender(id, pm, sprm, sm, bpm, s.onWantsSent, s.onPeersExhausted, network, providerSelectionMode)

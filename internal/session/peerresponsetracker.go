@@ -21,10 +21,10 @@ type peerResponseTracker struct {
 func newPeerResponseTracker(network bsnet.BitSwapNetwork, providerSelectionMode int) *peerResponseTracker {
 	return &peerResponseTracker{
 		firstResponder: 	make(map[peer.ID]int),
-		network: 			network
-		providerSMode:		providerSelectionMode
-		closestPeerQueried:	nil 
-		successiveQueries:  0
+		network: 			network,
+		providerSMode:		providerSelectionMode,
+		closestPeerQueried:	nil, 
+		successiveQueries:  0,
 	}
 }
 

@@ -39,12 +39,14 @@ var sendLatency = 2 * time.Second
 var minSendRate = (100 * 1000) / 8 // 100kbit/s
 
 // NewFromIpfsHost returns a BitSwapNetwork supported by underlying IPFS host.
-func NewFromIpfsHost(host host.Host, r routing.ContentRouting, opts ...NetOpt) BitSwapNetwork {
+func NewFromIpfsHost(host host.Host, r routing.ContentRouting, serverAddress string, opts ...NetOpt) BitSwapNetwork {
 	s := processSettings(opts...)
 
 	bitswapNetwork := impl{
-		host:    host,
-		routing: r,
+		host:    	host,
+		routing: 	r,
+		serveraddr:	serverAddress,
+
 
 		protocolBitswapNoVers:  s.ProtocolPrefix + ProtocolBitswapNoVers,
 		protocolBitswapOneZero: s.ProtocolPrefix + ProtocolBitswapOneZero,
@@ -84,6 +86,8 @@ type impl struct {
 
 	host          host.Host
 	routing       routing.ContentRouting
+	serveraddr	  string	
+
 	connectEvtMgr *connectEventManager
 
 	protocolBitswapNoVers  protocol.ID
@@ -345,10 +349,10 @@ func (bsnet *impl) SendMessage(
 		_ = s.Reset()
 		return err
 	}
-	senderID := impl.host.ID()
+	senderID := bsnet.host.ID().String()
 
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(s.serveraddr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(bsnet.serveraddr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -357,11 +361,11 @@ func (bsnet *impl) SendMessage(
 
 	if outgoing.Wantlist() != nil {
 		for _, wantentry := range outgoing.Wantlist() {
-			blockcRequested := wantentry.Cid
+			blockRequested := wantentry.Cid
 			// Contact the server and print out its response.
 			ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
-			_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: blockRequested.String(), Localpeer: senderID, Remotepeer: p, SentAt: nil, ReceivedAt:nil, BlockRequestedAt:timestamppb.Now(), Duplicate: false})
+			_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: blockRequested.String(), Localpeer: senderID, Remotepeer: p.String(), SentAt: nil, ReceivedAt:nil, BlockRequestedAt:timestamppb.Now(), Duplicate: false})
 			if err != nil {
 				log.Fatalf("could not greet: %v", err)
 			}
@@ -372,7 +376,7 @@ func (bsnet *impl) SendMessage(
 			// Contact the server and print out its response.
 			ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
-			_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: blockRequested.String(), Localpeer: from, Remotepeer: p, SentAt: timestamppb.Now(), ReceivedAt:nil, BlockRequestedAt:nil, Duplicate: false})
+			_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: blockRequested.String(), Localpeer: senderID, Remotepeer: p.String(), SentAt: timestamppb.Now(), ReceivedAt:nil, BlockRequestedAt:nil, Duplicate: false})
 			if err != nil {
 				log.Fatalf("could not greet: %v", err)
 			}
