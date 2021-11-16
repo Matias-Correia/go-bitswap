@@ -23,7 +23,6 @@ func newPeerResponseTracker(network bsnet.BitSwapNetwork, providerSelectionMode 
 		firstResponder: 	make(map[peer.ID]int),
 		network: 			network,
 		providerSMode:		providerSelectionMode,
-		closestPeerQueried:	nil, 
 		successiveQueries:  0,
 	}
 }
@@ -50,7 +49,7 @@ func (prt *peerResponseTracker) choose(peers []peer.ID, sessionAvgLatThreshold b
 	// of 4 times consecutively
 	}else if prt.providerSMode == 3{
 		if sessionAvgLatThreshold == true{
-			closestPeer = prt.leastLatencyPeer(peers)
+			closestPeer := prt.leastLatencyPeer(peers)
 			if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries < 4) {
 				prt.successiveQueries ++
 				return closestPeer
@@ -69,7 +68,7 @@ func (prt *peerResponseTracker) choose(peers []peer.ID, sessionAvgLatThreshold b
 	// average is below the threshold it chooses like in mode 2	
 	}else if providerSMode == 4{
 		if sessionAvgLatThreshold == true{
-			closestPeer = prt.leastLatencyPeer(peers)
+			closestPeer := prt.leastLatencyPeer(peers)
 			if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries < 4) {
 				prt.successiveQueries ++
 				return closestPeer
