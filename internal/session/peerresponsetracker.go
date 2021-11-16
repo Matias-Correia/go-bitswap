@@ -70,7 +70,7 @@ func (prt *peerResponseTracker) choose(peers []peer.ID, sessionAvgLatThreshold b
 	}else if providerSMode == 4{
 		if sessionAvgLatThreshold == true{
 			closestPeer = leastLatencyPeer(peers)
-			if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries < 4 {
+			if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries < 4) {
 				prt.successiveQueries ++
 				return closestPeer
 			}else if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries >= 4){
@@ -167,6 +167,7 @@ func (prt *peerResponseTracker) getLatencyCount(p peer.ID) int {
 	count, ok := prt.firstResponder[p]
 	if ok {
 		return count
+	}
 	latency := prt.network.Latency(p)
 	
 	//Latency Thresholds
