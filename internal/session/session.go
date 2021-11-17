@@ -233,7 +233,7 @@ func (s *Session) ReceiveFrom(from peer.ID, ks []cid.Cid, haves []cid.Cid, dontH
 		// Contact the server and print out its response.
 		ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: d.String(), Localpeer: from, Remotepeer: s.self, SentAt: nil, ReceivedAt:timestamppb.Now(), BlockRequestedAt:nil, Duplicate: false})
+		_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: d.String(), Localpeer: from.String(), Remotepeer: s.self.String(), SentAt: nil, ReceivedAt:timestamppb.Now(), BlockRequestedAt:nil, Duplicate: false})
 		if err != nil {
 			log.Fatalf("could not greet: %v", err)
 		}

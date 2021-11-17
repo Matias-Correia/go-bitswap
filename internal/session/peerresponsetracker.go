@@ -66,7 +66,7 @@ func (prt *peerResponseTracker) choose(peers []peer.ID, sessionAvgLatThreshold b
 	// If the provider mode is set to 3 in the config file then choose
 	// operates like in mode 3 althought whenever the session latency
 	// average is below the threshold it chooses like in mode 2	
-	}else if providerSMode == 4{
+	}else if prt.providerSMode == 4{
 		if sessionAvgLatThreshold == true{
 			closestPeer := prt.leastLatencyPeer(peers)
 			if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries < 4) {
@@ -85,6 +85,7 @@ func (prt *peerResponseTracker) choose(peers []peer.ID, sessionAvgLatThreshold b
 	}else{
 		return prt.chooseDefault(peers)
 	}
+	return prt.chooseDefault(peers)
 }
 
 // chooseClosest picks a peer from the list of candidate peers, favouring those peers

@@ -336,7 +336,7 @@ func (sws *sessionWantSender) processAvailability(availability map[peer.ID]bool)
 				newlyAvailable = append(newlyAvailable, p)
 			}
 		} else {
-			wasAvailable := sws.spm.RemovePeer(p)
+			wasAvailable := sws.spm.RemovePeer(p,sws.latencyThreshold)
 			if wasAvailable {
 				stateChange = true
 				newlyUnavailable = append(newlyUnavailable, p)
@@ -729,14 +729,14 @@ func (wi *wantInfo) setPeerBlockPresence(p peer.ID, bp BlockPresence, latThresho
 }
 
 // removePeer deletes the given peer from the want info
-func (wi *wantInfo) removePeer(p peer.ID) {
+func (wi *wantInfo) removePeer(p peer.ID, latThreshold bool) {
 	// If we were waiting to hear back from the peer that is being removed,
 	// clear the sentTo field so we no longer wait
 	if p == wi.sentTo {
 		wi.sentTo = ""
 	}
 	delete(wi.blockPresence, p)
-	wi.calculateBestPeer()
+	wi.calculateBestPeer(latThreshold)
 }
 
 // calculateBestPeer finds the best peer to send the want to next
