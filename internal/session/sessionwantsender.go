@@ -336,7 +336,7 @@ func (sws *sessionWantSender) processAvailability(availability map[peer.ID]bool)
 				newlyAvailable = append(newlyAvailable, p)
 			}
 		} else {
-			wasAvailable := sws.spm.RemovePeer(p,sws.latencyThreshold)
+			wasAvailable := sws.spm.RemovePeer(p)
 			if wasAvailable {
 				stateChange = true
 				newlyUnavailable = append(newlyUnavailable, p)
