@@ -376,13 +376,13 @@ func (bsnet *impl) SendMessage(
 	if outgoing.Wantlist() != nil {
 		for _, wantentry := range outgoing.Wantlist() {
 			blockRequested := wantentry.Cid.String()
-			bsnet.gwChan <- logrpc.Loginfo{Rpc: rpcReceive, BlockID: blockRequested, Localpeer: senderID, Remotepeer: p.String()}
+			bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcReceive, BlockID: blockRequested, Localpeer: senderID, Remotepeer: p.String()}
 			
 		}
 	}else if outgoing.Blocks() != nil{
 		for _, block := range outgoing.Blocks() {
 			blockSent := block.Cid().String()
-			bsnet.gwChan <- logrpc.Loginfo{Rpc: rpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: p.String()}
+			bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: p.String()}
 		}
 	}
 
