@@ -32,17 +32,6 @@ const (
 	broadcastLiveWantsLimit = 64
 )
 
-type rpcType int
-
-const (
-	// DB Log Received blocks
-	rpcReceive rpcType = iota
-	// DB Log Want blocks
-	rpcWant
-	// DB Log Send Blocks
-	rpcBSend
-)
-
 
 // PeerManager keeps track of which sessions are interested in which peers
 // and takes care of sending wants for the sessions
@@ -239,7 +228,7 @@ func (s *Session) ReceiveFrom(from peer.ID, ks []cid.Cid, haves []cid.Cid, dontH
 	}
 
 	for _, d := range ks {
-		s.gwChan <- logrpc.Loginfo{Rpc: rpcWant, BlockID: d.String(), Localpeer: from.String(), Remotepeer: s.self.String()}
+		s.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcWant, BlockID: d.String(), Localpeer: from.String(), Remotepeer: s.self.String()}
 	}
 
 	// Inform the session that blocks have been received

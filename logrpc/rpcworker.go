@@ -13,11 +13,11 @@ type rpcType int
 
 const (
 	// DB Log Received blocks
-	rpcReceive rpcType = iota
+	RpcReceive rpcType = iota
 	// DB Log Want blocks
-	rpcWant
+	RpcWant
 	// DB Log Send Blocks
-	rpcBSend
+	RpcBSend
 )
 
 
@@ -63,7 +63,7 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 		select {
 		case oper := <-gw.incoming:
 			switch oper.Rpc {
-			case rpcReceive:
+			case RpcReceive:
 				// Received blocks
 				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
@@ -71,7 +71,7 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 				if err != nil {
 					//log.Fatalf("could not greet: %v", err)
 				}
-			case rpcWant:
+			case RpcWant:
 				// Want sent
 				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
@@ -79,7 +79,7 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 				if err != nil {
 					//log.Fatalf("could not greet: %v", err)
 				}
-			case rpcBSend:
+			case RpcBSend:
 				// Block sent
 				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()

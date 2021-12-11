@@ -40,17 +40,6 @@ var minSendTimeout = 10 * time.Second
 var sendLatency = 2 * time.Second
 var minSendRate = (100 * 1000) / 8 // 100kbit/s
 
-type rpcType int
-
-const (
-	// DB Log Received blocks
-	rpcReceive rpcType = iota
-	// DB Log Want blocks
-	rpcWant
-	// DB Log Send Blocks
-	rpcBSend
-)
-
 
 // NewFromIpfsHost returns a BitSwapNetwork supported by underlying IPFS host.
 func NewFromIpfsHost(host host.Host, r routing.ContentRouting, serverAddress string, gwChan chan<- logrpc.Loginfo, opts ...NetOpt) BitSwapNetwork {
@@ -176,13 +165,13 @@ func (s *streamMessageSender) SendMsg(ctx context.Context, msg bsmsg.BitSwapMess
 		if msg.Wantlist() != nil {
 			for _, wantentry := range msg.Wantlist() {
 				blockRequested := wantentry.Cid.String()
-				s.bsnet.gwChan <- logrpc.Loginfo{Rpc: rpcWant, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
+				s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcWant, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
 				
 			}
 		}else if msg.Blocks() != nil{
 			for _, block := range msg.Blocks() {
 				blockSent := block.Cid().String()
-				s.bsnet.gwChan <- logrpc.Loginfo{Rpc: rpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: s.to.String()}
+				s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: s.to.String()}
 			}
 		}
 
