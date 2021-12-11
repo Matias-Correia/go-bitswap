@@ -1,4 +1,4 @@
-package grpc
+package logrpc
 
 import (
 	"context"
@@ -22,12 +22,12 @@ const (
 
 
 type Loginfo struct {
-	rpc   		rpcType
+	Rpc   		rpcType
 
 	//Log info
-	blockID		string 
-	localpeer	string
-	remotepeer	string
+	BlockID		string 
+	Localpeer	string
+	Remotepeer	string
 }
 
 type GrpcWorker struct{

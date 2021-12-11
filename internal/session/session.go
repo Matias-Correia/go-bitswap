@@ -18,11 +18,11 @@ import (
 	loggables "github.com/libp2p/go-libp2p-loggables"
 	"go.uber.org/zap"
 
-	"google.golang.org/grpc"
-	pb "github.com/Matias-Correia/go-test_server/server/protologs"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	//"google.golang.org/grpc"
+	//pb "github.com/Matias-Correia/go-test_server/server/protologs"
+	//timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 
-	grpc "github.com/ipfs/go-bitswap/grpc"
+	logrpc "github.com/ipfs/go-bitswap/logrpc"
 )
 
 var log = logging.Logger("bs:sess")
@@ -141,7 +141,7 @@ type Session struct {
 	providerSMode 			int
 	serveraddr	 			string
 	sessionAvgThreshold		time.Duration
-	gwChan 					chan<- grpc.Loginfo
+	gwChan 					chan<- logrpc.Loginfo
 
 	self peer.ID
 }
@@ -164,7 +164,7 @@ func New(
 	providerSelectionMode int,
 	serverAddress string,
 	sessionavglatthreshold time.Duration,
-	gwChan chan<- grpc.Loginfo
+	gwChan chan<- logrpc.Loginfo
 	self peer.ID) *Session {
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -226,16 +226,8 @@ func (s *Session) ReceiveFrom(from peer.ID, ks []cid.Cid, haves []cid.Cid, dontH
 		return
 	}
 
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(s.serveraddr, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	c := pb.NewLogTestDataClient(conn)
-
 	for _, d := range ks {
-		s.gwChan <- grpc.Loginfo{rpc: rpcWant, blockID: d.String(), localpeer: from.String(), remotepeer: s.self.String()}
+		s.gwChan <- logrpc.Loginfo{Rpc: rpcWant, BlockID: d.String(), Localpeer: from.String(), Remotepeer: s.self.String()}
 	}
 
 	// Inform the session that blocks have been received

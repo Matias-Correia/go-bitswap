@@ -24,11 +24,11 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multistream"
 
-	"google.golang.org/grpc"
-	pb "github.com/Matias-Correia/go-test_server/server/protologs"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	//"google.golang.org/grpc"
+	//pb "github.com/Matias-Correia/go-test_server/server/protologs"
+	//timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 
-	grpc "github.com/ipfs/go-bitswap/grpc"
+	logrpc "github.com/ipfs/go-bitswap/logrpc"
 )
 
 var log = logging.Logger("bitswap_network")
@@ -89,7 +89,7 @@ type impl struct {
 	host          host.Host
 	routing       routing.ContentRouting
 	serveraddr	  string	
-	gwChan		  chan<- grpc.Loginfo
+	gwChan		  chan<- logrpc.Loginfo
  
 	connectEvtMgr *connectEventManager
 
@@ -161,24 +161,16 @@ func (s *streamMessageSender) SendMsg(ctx context.Context, msg bsmsg.BitSwapMess
 		
 		senderID := s.bsnet.host.ID().String()
 
-		// Set up a connection to the server.
-		conn, err := grpc.Dial(bsnet.serveraddr, grpc.WithInsecure(), grpc.WithBlock())
-		if err != nil {
-			log.Fatalf("did not connect: %v", err)
-		}
-		defer conn.Close()
-		c := pb.NewLogTestDataClient(conn)
-
 		if msg.Wantlist() != nil {
-			for _, wantentry := range outgoing.Wantlist() {
+			for _, wantentry := range msg.Wantlist() {
 				blockRequested := wantentry.Cid().String()
-				s.bsnet.gwChan <- grpc.Loginfo{rpc: rpcWant, blockID: blockRequested, localpeer: senderID, remotepeer: s.to.String()}
+				s.bsnet.gwChan <- logrpc.Loginfo{Rpc: rpcWant, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
 				
 			}
 		}else if msg.Blocks() != nil{
-			for _, block := range outgoing.Blocks() {
+			for _, block := range msg.Blocks() {
 				blockSent := block.Cid().String()
-				s.bsnet.gwChan <- grpc.Loginfo{rpc: rpcBSend, blockID: blockSent, localpeer: senderID, remotepeer: s.to.String()}
+				s.bsnet.gwChan <- logrpc.Loginfo{Rpc: rpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: s.to.String()}
 			}
 		}
 
@@ -379,24 +371,17 @@ func (bsnet *impl) SendMessage(
 	}
 	senderID := bsnet.host.ID().String()
 
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(bsnet.serveraddr, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	c := pb.NewLogTestDataClient(conn)
-
+	
 	if outgoing.Wantlist() != nil {
 		for _, wantentry := range outgoing.Wantlist() {
 			blockRequested := wantentry.Cid().String()
-			bsnet.gwChan <- grpc.Loginfo{rpc: rpcReceive, blockID: blockRequested, localpeer: senderID, remotepeer: p.String()}
+			bsnet.gwChan <- logrpc.Loginfo{Rpc: rpcReceive, BlockID: blockRequested, Localpeer: senderID, Remotepeer: p.String()}
 			
 		}
 	}else if outgoing.Blocks() != nil{
 		for _, block := range outgoing.Blocks() {
 			blockSent := block.Cid().String()
-			bsnet.gwChan <- grpc.Loginfo{rpc: rpcBSend, blockID: blockSent, localpeer: senderID, remotepeer: p.String()}
+			bsnet.gwChan <- logrpc.Loginfo{Rpc: rpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: p.String()}
 		}
 	}
 
