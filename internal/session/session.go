@@ -165,7 +165,7 @@ func New(
 	providerSelectionMode int,
 	serverAddress string,
 	sessionavglatthreshold time.Duration,
-	gwChan chan<- logrpc.Loginfo
+	gwChan chan<- logrpc.Loginfo,
 	self peer.ID) *Session {
 
 	ctx, cancel := context.WithCancel(ctx)
