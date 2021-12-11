@@ -27,6 +27,8 @@ import (
 	"google.golang.org/grpc"
 	pb "github.com/Matias-Correia/go-test_server/server/protologs"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+
+	grpc "github.com/ipfs/go-bitswap/grpc"
 )
 
 var log = logging.Logger("bitswap_network")
@@ -39,14 +41,14 @@ var sendLatency = 2 * time.Second
 var minSendRate = (100 * 1000) / 8 // 100kbit/s
 
 // NewFromIpfsHost returns a BitSwapNetwork supported by underlying IPFS host.
-func NewFromIpfsHost(host host.Host, r routing.ContentRouting, serverAddress string, opts ...NetOpt) BitSwapNetwork {
+func NewFromIpfsHost(host host.Host, r routing.ContentRouting, serverAddress string, gwChan chan<- grpc.Loginfo, opts ...NetOpt) BitSwapNetwork {
 	s := processSettings(opts...)
 
 	bitswapNetwork := impl{
 		host:    	host,
 		routing: 	r,
 		serveraddr:	serverAddress,
-
+		gwChan:		gwChan,
 
 		protocolBitswapNoVers:  s.ProtocolPrefix + ProtocolBitswapNoVers,
 		protocolBitswapOneZero: s.ProtocolPrefix + ProtocolBitswapOneZero,
@@ -87,7 +89,8 @@ type impl struct {
 	host          host.Host
 	routing       routing.ContentRouting
 	serveraddr	  string	
-
+	gwChan		  chan<- grpc.Loginfo
+ 
 	connectEvtMgr *connectEventManager
 
 	protocolBitswapNoVers  protocol.ID
@@ -155,6 +158,31 @@ func (s *streamMessageSender) SupportsHave() bool {
 // Send a message to the peer, attempting multiple times
 func (s *streamMessageSender) SendMsg(ctx context.Context, msg bsmsg.BitSwapMessage) error {
 	return s.multiAttempt(ctx, func() error {
+		
+		senderID := s.bsnet.host.ID().String()
+
+		// Set up a connection to the server.
+		conn, err := grpc.Dial(bsnet.serveraddr, grpc.WithInsecure(), grpc.WithBlock())
+		if err != nil {
+			log.Fatalf("did not connect: %v", err)
+		}
+		defer conn.Close()
+		c := pb.NewLogTestDataClient(conn)
+
+		if msg.Wantlist() != nil {
+			for _, wantentry := range outgoing.Wantlist() {
+				blockRequested := wantentry.Cid().String()
+				s.bsnet.gwChan <- grpc.Loginfo{rpc: rpcWant, blockID: blockRequested, localpeer: senderID, remotepeer: s.to.String()}
+				
+			}
+		}else if msg.Blocks() != nil{
+			for _, block := range outgoing.Blocks() {
+				blockSent := block.Cid().String()
+				s.bsnet.gwChan <- grpc.Loginfo{rpc: rpcBSend, blockID: blockSent, localpeer: senderID, remotepeer: s.to.String()}
+			}
+		}
+
+		
 		return s.send(ctx, msg)
 	})
 }
@@ -361,27 +389,17 @@ func (bsnet *impl) SendMessage(
 
 	if outgoing.Wantlist() != nil {
 		for _, wantentry := range outgoing.Wantlist() {
-			blockRequested := wantentry.Cid
-			// Contact the server and print out its response.
-			ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: blockRequested.String(), Localpeer: senderID, Remotepeer: p.String(), SentAt: nil, ReceivedAt:nil, BlockRequestedAt:timestamppb.Now(), Duplicate: false})
-			if err != nil {
-				log.Fatalf("could not greet: %v", err)
-			}
+			blockRequested := wantentry.Cid().String()
+			bsnet.gwChan <- grpc.Loginfo{rpc: rpcReceive, blockID: blockRequested, localpeer: senderID, remotepeer: p.String()}
+			
 		}
 	}else if outgoing.Blocks() != nil{
 		for _, block := range outgoing.Blocks() {
-			blockRequested := block.Cid()
-			// Contact the server and print out its response.
-			ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: blockRequested.String(), Localpeer: senderID, Remotepeer: p.String(), SentAt: timestamppb.Now(), ReceivedAt:nil, BlockRequestedAt:nil, Duplicate: false})
-			if err != nil {
-				log.Fatalf("could not greet: %v", err)
-			}
+			blockSent := block.Cid().String()
+			bsnet.gwChan <- grpc.Loginfo{rpc: rpcBSend, blockID: blockSent, localpeer: senderID, remotepeer: p.String()}
 		}
 	}
+
 
 	return s.Close()
 }

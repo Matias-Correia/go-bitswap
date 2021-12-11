@@ -21,6 +21,8 @@ import (
 	"google.golang.org/grpc"
 	pb "github.com/Matias-Correia/go-test_server/server/protologs"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+
+	grpc "github.com/ipfs/go-bitswap/grpc"
 )
 
 var log = logging.Logger("bs:sess")
@@ -139,6 +141,7 @@ type Session struct {
 	providerSMode 			int
 	serveraddr	 			string
 	sessionAvgThreshold		time.Duration
+	gwChan 					chan<- grpc.Loginfo
 
 	self peer.ID
 }
@@ -161,6 +164,7 @@ func New(
 	providerSelectionMode int,
 	serverAddress string,
 	sessionavglatthreshold time.Duration,
+	gwChan chan<- grpc.Loginfo
 	self peer.ID) *Session {
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -186,6 +190,7 @@ func New(
 		providerSMode:		 providerSelectionMode,
 		serveraddr:			 serverAddress,
 		sessionAvgThreshold: sessionavglatthreshold,
+		gwChan:				 gwChan,
 		self:                self,
 	}
 	s.sws = newSessionWantSender(id, pm, sprm, sm, bpm, s.onWantsSent, s.onPeersExhausted, network, providerSelectionMode)
@@ -230,13 +235,7 @@ func (s *Session) ReceiveFrom(from peer.ID, ks []cid.Cid, haves []cid.Cid, dontH
 	c := pb.NewLogTestDataClient(conn)
 
 	for _, d := range ks {
-		// Contact the server and print out its response.
-		ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-		_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: d.String(), Localpeer: from.String(), Remotepeer: s.self.String(), SentAt: nil, ReceivedAt:timestamppb.Now(), BlockRequestedAt:nil, Duplicate: false})
-		if err != nil {
-			log.Fatalf("could not greet: %v", err)
-		}
+		s.gwChan <- grpc.Loginfo{rpc: rpcWant, blockID: d.String(), localpeer: from.String(), remotepeer: s.self.String()}
 	}
 
 	// Inform the session that blocks have been received
