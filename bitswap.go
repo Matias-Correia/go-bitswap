@@ -37,7 +37,7 @@ import (
 	procctx "github.com/jbenet/goprocess/context"
 	"github.com/libp2p/go-libp2p-core/peer"
 
-	grpc "github.com/ipfs/go-bitswap/grpc"
+	logrpc "github.com/ipfs/go-bitswap/logrpc"
 )
 
 var log = logging.Logger("bitswap")
@@ -181,7 +181,7 @@ func WithTaskComparator(comparator TaskComparator) Option {
 // BitSwapNetwork. This function registers the returned instance as the network
 // delegate. Runs until context is cancelled or bitswap.Close is called.
 func New(parent context.Context, network bsnet.BitSwapNetwork,
-	bstore blockstore.Blockstore, providerSelection int, serverAddress string, sessionavglatthreshold time.Duration, gw grpc.GrpcWorker, options ...Option) exchange.Interface {
+	bstore blockstore.Blockstore, providerSelection int, serverAddress string, sessionavglatthreshold time.Duration, gw logrpc.GrpcWorker, options ...Option) exchange.Interface {
 
 	// important to use provided parent context (since it may include important
 	// loggable data). It's probably not a good idea to allow bitswap to be
