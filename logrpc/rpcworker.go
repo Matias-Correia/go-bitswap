@@ -62,12 +62,12 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 	for {
 		select {
 		case oper := <-gw.incoming:
-			switch oper.rpc {
+			switch oper.Rpc {
 			case rpcReceive:
 				// Received blocks
 				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
-				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.blockID, Localpeer: oper.localpeer, Remotepeer: oper.remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
+				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
 				if err != nil {
 					//log.Fatalf("could not greet: %v", err)
 				}
@@ -75,7 +75,7 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 				// Want sent
 				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
-				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.blockID, Localpeer: oper.localpeer, Remotepeer: oper.remotepeer, SentAt: nil, ReceivedAt: nil, BlockRequestedAt: timestamppb.Now(), Duplicate: false})
+				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: nil, BlockRequestedAt: timestamppb.Now(), Duplicate: false})
 				if err != nil {
 					//log.Fatalf("could not greet: %v", err)
 				}
@@ -83,7 +83,7 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 				// Block sent
 				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
-				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.blockID, Localpeer: oper.localpeer, Remotepeer: oper.remotepeer, SentAt: timestamppb.Now(), ReceivedAt: nil, BlockRequestedAt: nil, Duplicate: false})
+				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: timestamppb.Now(), ReceivedAt: nil, BlockRequestedAt: nil, Duplicate: false})
 				if err != nil {
 					//log.Fatalf("could not greet: %v", err)
 				}				
