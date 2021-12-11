@@ -32,6 +32,18 @@ const (
 	broadcastLiveWantsLimit = 64
 )
 
+type rpcType int
+
+const (
+	// DB Log Received blocks
+	rpcReceive rpcType = iota
+	// DB Log Want blocks
+	rpcWant
+	// DB Log Send Blocks
+	rpcBSend
+)
+
+
 // PeerManager keeps track of which sessions are interested in which peers
 // and takes care of sending wants for the sessions
 type PeerManager interface {
