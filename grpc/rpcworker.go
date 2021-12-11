@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"google.golang.org/grpc"
@@ -55,7 +54,7 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(gw.serverAddress, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		//log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
 	c := pb.NewLogTestDataClient(conn)	
@@ -70,7 +69,7 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 				defer cancel()
 				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.blockID, Localpeer: oper.localpeer, Remotepeer: oper.remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
 				if err != nil {
-					log.Fatalf("could not greet: %v", err)
+					//log.Fatalf("could not greet: %v", err)
 				}
 			case rpcWant:
 				// Want sent
@@ -78,7 +77,7 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 				defer cancel()
 				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.blockID, Localpeer: oper.localpeer, Remotepeer: oper.remotepeer, SentAt: nil, ReceivedAt: nil, BlockRequestedAt: timestamppb.Now(), Duplicate: false})
 				if err != nil {
-					log.Fatalf("could not greet: %v", err)
+					//log.Fatalf("could not greet: %v", err)
 				}
 			case rpcBSend:
 				// Block sent
@@ -86,14 +85,12 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 				defer cancel()
 				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.blockID, Localpeer: oper.localpeer, Remotepeer: oper.remotepeer, SentAt: timestamppb.Now(), ReceivedAt: nil, BlockRequestedAt: nil, Duplicate: false})
 				if err != nil {
-					log.Fatalf("could not greet: %v", err)
+					//log.Fatalf("could not greet: %v", err)
 				}				
 			default:
 				panic("unhandled operation")
 			}
 		case <-ctx.Done():
-			// Shutdown
-			s.handleShutdown()
 			return
 		}
 	}
