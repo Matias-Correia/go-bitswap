@@ -374,10 +374,10 @@ func (bsnet *impl) SendMessage(
 		_ = s.Reset()
 		return err
 	}
-	senderID := bsnet.host.ID().String()
+	/*senderID := bsnet.host.ID().String()
 
 	
-	/*if outgoing.Wantlist() != nil {
+	if outgoing.Wantlist() != nil {
 		for _, wantentry := range outgoing.Wantlist() {
 			blockRequested := wantentry.Cid.String()
 			bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcReceive, BlockID: blockRequested, Localpeer: senderID, Remotepeer: p.String()}
