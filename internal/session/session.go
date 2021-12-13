@@ -228,7 +228,7 @@ func (s *Session) ReceiveFrom(from peer.ID, ks []cid.Cid, haves []cid.Cid, dontH
 	}
 
 	for _, d := range ks {
-		s.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcWant, BlockID: d.String(), Localpeer: from.String(), Remotepeer: s.self.String()}
+		s.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcReceive, BlockID: d.String(), Localpeer: from.String(), Remotepeer: s.self.String()}
 	}
 
 	// Inform the session that blocks have been received
