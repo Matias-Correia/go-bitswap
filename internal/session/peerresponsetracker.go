@@ -54,7 +54,10 @@ func (prt *peerResponseTracker) choose(peers []peer.ID, sessionAvgLatThreshold b
 				prt.successiveQueries ++
 				return closestPeer
 			}else if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries >= 4){
-				prt.nextLeastLatencyPeer(peers,closestPeer)
+				nextclosestPeer = prt.nextLeastLatencyPeer(peers,closestPeer)
+				prt.closestPeerQueried = nextclosestPeer
+				prt.successiveQueries = 1
+				return nextclosestPeer
 			}else{
 				prt.closestPeerQueried = closestPeer
 				prt.successiveQueries = 1
@@ -73,7 +76,10 @@ func (prt *peerResponseTracker) choose(peers []peer.ID, sessionAvgLatThreshold b
 				prt.successiveQueries ++
 				return closestPeer
 			}else if (prt.closestPeerQueried == closestPeer) && (prt.successiveQueries >= 4){
-				prt.nextLeastLatencyPeer(peers,closestPeer)
+				nextclosestPeer = prt.nextLeastLatencyPeer(peers,closestPeer)
+				prt.closestPeerQueried = nextclosestPeer
+				prt.successiveQueries = 1
+				return nextclosestPeer
 			}else{
 				prt.closestPeerQueried = closestPeer
 				prt.successiveQueries = 1
