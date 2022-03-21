@@ -160,11 +160,11 @@ func (s *streamMessageSender) SupportsHave() bool {
 func (s *streamMessageSender) SendMsg(ctx context.Context, msg bsmsg.BitSwapMessage) error {
 	return s.multiAttempt(ctx, func() error {
 		
-		senderID := s.bsnet.host.ID().String()
+		//senderID := s.bsnet.host.ID().String()
 
 		if msg.Wantlist() != nil {
 			for _, wantentry := range msg.Wantlist() {
-				blockRequested := wantentry.Cid.String()
+				//blockRequested := wantentry.Cid.String()
 				/*if wantentry.WantType == 0 {
 					s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcBSend, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
 				}else{*/
@@ -374,7 +374,7 @@ func (bsnet *impl) SendMessage(
 		_ = s.Reset()
 		return err
 	}
-	senderID := bsnet.host.ID().String()
+	//senderID := bsnet.host.ID().String()
 
 	
 	//if outgoing.Blocks() != nil{
