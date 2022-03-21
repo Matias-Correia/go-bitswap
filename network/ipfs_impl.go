@@ -168,7 +168,7 @@ func (s *streamMessageSender) SendMsg(ctx context.Context, msg bsmsg.BitSwapMess
 				/*if wantentry.WantType == 0 {
 					s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcBSend, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
 				}else{*/
-					s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcWant, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
+					//s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcWant, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
 				//}
 				
 			}
@@ -377,12 +377,12 @@ func (bsnet *impl) SendMessage(
 	senderID := bsnet.host.ID().String()
 
 	
-	if outgoing.Blocks() != nil{
-		for _, block := range outgoing.Blocks() {
-			blockSent := block.Cid().String()
-			bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: p.String()}
-		}
-	}
+	//if outgoing.Blocks() != nil{
+	//	for _, block := range outgoing.Blocks() {
+	//		blockSent := block.Cid().String()
+	//		bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: p.String()}
+	//	}
+	//}
 
 
 	return s.Close()
