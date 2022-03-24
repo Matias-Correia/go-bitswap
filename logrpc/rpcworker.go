@@ -40,7 +40,7 @@ type GrpcWorker struct{
 func New(serverAddress string) GrpcWorker {
 	gw := GrpcWorker{
 		serverAddress:	serverAddress,
-		incoming:		make(chan Loginfo),
+		incoming:		make(chan Loginfo, 1000),
 	}
 	return gw
 }
