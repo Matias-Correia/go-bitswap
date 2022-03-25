@@ -2,11 +2,11 @@ package logrpc
 
 import (
 	"context"
-	"time"
+	//"time"
 
 	"google.golang.org/grpc"
 	pb "github.com/Matias-Correia/go-test_server/server/protologs"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	//timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type rpcType int
