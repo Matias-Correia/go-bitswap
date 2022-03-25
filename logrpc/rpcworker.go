@@ -4,8 +4,8 @@ import (
 	"context"
 	//"time"
 
-	"google.golang.org/grpc"
-	pb "github.com/Matias-Correia/go-test_server/server/protologs"
+	//"google.golang.org/grpc"
+	//pb "github.com/Matias-Correia/go-test_server/server/protologs"
 	//timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -52,13 +52,13 @@ func (gw *GrpcWorker) GetChan() chan<- Loginfo {
 func (gw *GrpcWorker) Run(ctx context.Context){
 	
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(gw.serverAddress, grpc.WithInsecure(), grpc.WithBlock())
+	/*conn, err := grpc.Dial(gw.serverAddress, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		//log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
 	c := pb.NewLogTestDataClient(conn)	
-	
+	*/
 	for {
 		select {
 		case oper := <-gw.incoming:
