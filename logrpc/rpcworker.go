@@ -65,28 +65,28 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 			switch oper.Rpc {
 			case RpcReceive:
 				// Received blocks
-				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
-				defer cancel()
-				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
-				if err != nil {
+				//ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+				//defer cancel()
+				//_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
+				//if err != nil {
 					//log.Fatalf("could not greet: %v", err)
-				}
+				//}
 			case RpcWant:
 				// Want sent
-				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+				/*ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
 				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: nil, BlockRequestedAt: timestamppb.Now(), Duplicate: false})
 				if err != nil {
 					//log.Fatalf("could not greet: %v", err)
-				}
+				}*/
 			case RpcBSend:
 				// Block sent
-				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+				/*ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
 				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: timestamppb.Now(), ReceivedAt: nil, BlockRequestedAt: nil, Duplicate: false})
 				if err != nil {
 					//log.Fatalf("could not greet: %v", err)
-				}				
+				}*/				
 			default:
 				panic("unhandled operation")
 			}
