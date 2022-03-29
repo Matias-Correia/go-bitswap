@@ -427,6 +427,7 @@ func (s *Session) findMorePeers(ctx context.Context, c cid.Cid) {
 
 // handleShutdown is called when the session shuts down
 func (s *Session) handleShutdown() {
+	s.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcSOver, BlockID: "teste", Localpeer: "teste", Remotepeer: s.self.String()}
 	// Stop the idle timer
 	s.idleTick.Stop()
 	// Shut down the session peer manager
