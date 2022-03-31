@@ -27,6 +27,8 @@ var (
 
 // BitSwapNetwork provides network connectivity for BitSwap sessions.
 type BitSwapNetwork interface {
+	Export()
+
 	Self() peer.ID
 
 	// SendMessage sends a BitSwap message to a peer.
