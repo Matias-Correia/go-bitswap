@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"google.golang.org/grpc"
 	pb "github.com/Matias-Correia/go-test_server/server/protologs"
+	"google.golang.org/grpc"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -22,27 +22,26 @@ const (
 	RpcSOver
 )
 
-
 type Loginfo struct {
-	Rpc   		rpcType
+	Rpc rpcType
 
 	//Log info
-	BlockID		string 
-	Localpeer	string
-	Remotepeer	string
+	BlockID    string
+	Localpeer  string
+	Remotepeer string
 }
 
-type GrpcWorker struct{
-	serverAddress	string
+type GrpcWorker struct {
+	serverAddress string
 
 	// channel
-	incoming      	chan Loginfo
+	incoming chan Loginfo
 }
 
 func New(serverAddress string) GrpcWorker {
 	gw := GrpcWorker{
-		serverAddress:	serverAddress,
-		incoming:		make(chan Loginfo, 1000),
+		serverAddress: serverAddress,
+		incoming:      make(chan Loginfo, 1000),
 	}
 	return gw
 }
@@ -51,16 +50,15 @@ func (gw *GrpcWorker) GetChan() chan<- Loginfo {
 	return gw.incoming
 }
 
-func (gw *GrpcWorker) Run(ctx context.Context){
-	
+func (gw *GrpcWorker) Run(ctx context.Context) {
+
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(gw.serverAddress, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		//log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	c := pb.NewLogTestDataClient(conn)	
-	
+	c := pb.NewLogTestDataClient(conn)
 
 	// slice of Loginfo to be sent after the execution
 
@@ -69,52 +67,45 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 	for {
 		select {
 		case oper := <-gw.incoming:
-			
+
 			switch oper.Rpc {
 			case RpcReceive, RpcWant, RpcBSend:
-				
-				logs = append(logs, oper)				
-			
+
+				logs = append(logs, oper)
+
 			case RpcSOver:
-				ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
-				defer cancel()
-				_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
-				if err != nil {
-					//log.Fatalf("could not greet: %v", err)
-				}
-			
-				//for _, log := range logs {
-					/*switch log.Rpc {
+				for _, log := range logs {
+					switch log.Rpc {
 					case RpcReceive:
 						// Received blocks
-						//ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
-						//defer cancel()
-						//_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
-						//if err != nil {
+						ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+						defer cancel()
+						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
+						if err != nil {
 							//log.Fatalf("could not greet: %v", err)
-						//}
-						
+						}
+
 					case RpcWant:
 						// Want sent
-						/*ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+						ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 						defer cancel()
 						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: nil, BlockRequestedAt: timestamppb.Now(), Duplicate: false})
 						if err != nil {
 							//log.Fatalf("could not greet: %v", err)
-						}*/
-					/*case RpcBSend:
+						}
+					case RpcBSend:
 						// Block sent
-						/*ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
+						ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 						defer cancel()
 						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: timestamppb.Now(), ReceivedAt: nil, BlockRequestedAt: nil, Duplicate: false})
 						if err != nil {
 							//log.Fatalf("could not greet: %v", err)
-						}*/				
-					/*default:
+						}
+					default:
 						panic("unhandled operation")
-					}*/
-				//}
-			
+					}
+				}
+
 			default:
 				panic("unhandled operation")
 			}
@@ -123,4 +114,3 @@ func (gw *GrpcWorker) Run(ctx context.Context){
 		}
 	}
 }
-
