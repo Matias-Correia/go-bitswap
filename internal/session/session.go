@@ -8,8 +8,8 @@ import (
 	bsgetter "github.com/ipfs/go-bitswap/internal/getter"
 	notifications "github.com/ipfs/go-bitswap/internal/notifications"
 	bspm "github.com/ipfs/go-bitswap/internal/peermanager"
-	bsnet "github.com/ipfs/go-bitswap/network"
 	bssim "github.com/ipfs/go-bitswap/internal/sessioninterestmanager"
+	bsnet "github.com/ipfs/go-bitswap/network"
 	blocks "github.com/ipfs/go-block-format"
 	cid "github.com/ipfs/go-cid"
 	delay "github.com/ipfs/go-ipfs-delay"
@@ -31,7 +31,6 @@ var sflog = log.Desugar()
 const (
 	broadcastLiveWantsLimit = 64
 )
-
 
 // PeerManager keeps track of which sessions are interested in which peers
 // and takes care of sending wants for the sessions
@@ -138,11 +137,11 @@ type Session struct {
 	uuid  logging.Loggable
 	id    uint64
 	//Changes made to BitSwap
-	network 				bsnet.BitSwapNetwork	
-	providerSMode 			int
-	serveraddr	 			string
-	sessionAvgThreshold		time.Duration
-	gwChan 					chan<- logrpc.Loginfo
+	network             bsnet.BitSwapNetwork
+	providerSMode       int
+	serveraddr          string
+	sessionAvgThreshold time.Duration
+	gwChan              chan<- logrpc.Loginfo
 
 	self peer.ID
 }
@@ -188,14 +187,14 @@ func New(
 		initialSearchDelay:  initialSearchDelay,
 		periodicSearchDelay: periodicSearchDelay,
 		network:             network,
-		providerSMode:		 providerSelectionMode,
-		serveraddr:			 serverAddress,
+		providerSMode:       providerSelectionMode,
+		serveraddr:          serverAddress,
 		sessionAvgThreshold: sessionavglatthreshold,
-		gwChan:				 gwChan,
+		gwChan:              gwChan,
 		self:                self,
 	}
 	s.sws = newSessionWantSender(id, pm, sprm, sm, bpm, s.onWantsSent, s.onPeersExhausted, network, providerSelectionMode)
-	
+
 	go s.run(ctx)
 
 	return s
@@ -427,7 +426,7 @@ func (s *Session) findMorePeers(ctx context.Context, c cid.Cid) {
 
 // handleShutdown is called when the session shuts down
 func (s *Session) handleShutdown() {
-	s.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcSOver, BlockID: "teste", Localpeer: "teste", Remotepeer: s.self.String()}
+	//s.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcSOver, BlockID: "teste", Localpeer: "teste", Remotepeer: s.self.String()}
 	// Stop the idle timer
 	s.idleTick.Stop()
 	// Shut down the session peer manager
@@ -453,9 +452,9 @@ func (s *Session) handleReceive(ks []cid.Cid) {
 	s.latencyTrkr.receiveUpdate(len(wanted), totalLatency)
 
 	//If Average Latency goes bellow or above the threshold notify SessionWantSender
-	if s.latencyTrkr.averageLatency() > s.sessionAvgThreshold{
+	if s.latencyTrkr.averageLatency() > s.sessionAvgThreshold {
 		s.sws.triggerThreshold()
-	}else{
+	} else {
 		s.sws.unTriggerThreshold()
 	}
 

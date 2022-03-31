@@ -40,16 +40,15 @@ var minSendTimeout = 10 * time.Second
 var sendLatency = 2 * time.Second
 var minSendRate = (100 * 1000) / 8 // 100kbit/s
 
-
 // NewFromIpfsHost returns a BitSwapNetwork supported by underlying IPFS host.
 func NewFromIpfsHost(host host.Host, r routing.ContentRouting, serverAddress string, gwChan chan<- logrpc.Loginfo, opts ...NetOpt) BitSwapNetwork {
 	s := processSettings(opts...)
 
 	bitswapNetwork := impl{
-		host:    	host,
-		routing: 	r,
-		serveraddr:	serverAddress,
-		gwChan:		gwChan,
+		host:       host,
+		routing:    r,
+		serveraddr: serverAddress,
+		gwChan:     gwChan,
 
 		protocolBitswapNoVers:  s.ProtocolPrefix + ProtocolBitswapNoVers,
 		protocolBitswapOneZero: s.ProtocolPrefix + ProtocolBitswapOneZero,
@@ -87,11 +86,11 @@ type impl struct {
 	// alignment.
 	stats Stats
 
-	host          host.Host
-	routing       routing.ContentRouting
-	serveraddr	  string	
-	gwChan		  chan<- logrpc.Loginfo
- 
+	host       host.Host
+	routing    routing.ContentRouting
+	serveraddr string
+	gwChan     chan<- logrpc.Loginfo
+
 	connectEvtMgr *connectEventManager
 
 	protocolBitswapNoVers  protocol.ID
@@ -159,7 +158,7 @@ func (s *streamMessageSender) SupportsHave() bool {
 // Send a message to the peer, attempting multiple times
 func (s *streamMessageSender) SendMsg(ctx context.Context, msg bsmsg.BitSwapMessage) error {
 	return s.multiAttempt(ctx, func() error {
-		
+
 		senderID := s.bsnet.host.ID().String()
 
 		if msg.Wantlist() != nil {
@@ -168,9 +167,9 @@ func (s *streamMessageSender) SendMsg(ctx context.Context, msg bsmsg.BitSwapMess
 				/*if wantentry.WantType == 0 {
 					s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcBSend, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
 				}else{*/
-					s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcWant, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
-				}
-				
+				s.bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcWant, BlockID: blockRequested, Localpeer: senderID, Remotepeer: s.to.String()}
+			}
+
 		}
 		/*}else if msg.Blocks() != nil{
 			for _, block := range msg.Blocks() {
@@ -179,7 +178,6 @@ func (s *streamMessageSender) SendMsg(ctx context.Context, msg bsmsg.BitSwapMess
 			}
 		}*/
 
-		
 		return s.send(ctx, msg)
 	})
 }
@@ -248,6 +246,10 @@ func (s *streamMessageSender) send(ctx context.Context, msg bsmsg.BitSwapMessage
 	}
 
 	return nil
+}
+
+func (bsnet *impl) Export() {
+	bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcSOver, BlockID: "teste", Localpeer: "teste", Remotepeer: bsnet.Self().String()}
 }
 
 func (bsnet *impl) Self() peer.ID {
@@ -376,14 +378,12 @@ func (bsnet *impl) SendMessage(
 	}
 	senderID := bsnet.host.ID().String()
 
-	
-	if outgoing.Blocks() != nil{
+	if outgoing.Blocks() != nil {
 		for _, block := range outgoing.Blocks() {
 			blockSent := block.Cid().String()
 			bsnet.gwChan <- logrpc.Loginfo{Rpc: logrpc.RpcBSend, BlockID: blockSent, Localpeer: senderID, Remotepeer: p.String()}
 		}
 	}
-
 
 	return s.Close()
 }

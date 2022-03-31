@@ -126,10 +126,10 @@ func MaxOutstandingBytesPerPeer(count int) Option {
 	}
 }
 
-// ProviderSelectionMode sets the way BitSwap chooses the provider for a specific block 
-// Setting it to 1 will make BitSwap operate in his standart mode 
+// ProviderSelectionMode sets the way BitSwap chooses the provider for a specific block
+// Setting it to 1 will make BitSwap operate in his standart mode
 // Setting it to 2 will choose providers with the least latency
-// Setting it to 3 will choose providers with the least latency without randomization 
+// Setting it to 3 will choose providers with the least latency without randomization
 //func ProviderSelectionMode(mode int) Option {
 //	return func(bs *Bitswap) {
 //		bs.providerSelectionMode = mode
@@ -279,7 +279,7 @@ func New(parent context.Context, network bsnet.BitSwapNetwork,
 		engineTaskWorkerCount:            defaults.BitswapEngineTaskWorkerCount,
 		taskWorkerCount:                  defaults.BitswapTaskWorkerCount,
 		engineMaxOutstandingBytesPerPeer: defaults.BitswapMaxOutstandingBytesPerPeer,
-		providerSelectionMode:			  providerSelection,
+		providerSelectionMode:            providerSelection,
 		logServerAddress:                 serverAddress,
 		engineSetSendDontHaves:           true,
 		simulateDontHavesOnTimeout:       true,
@@ -426,6 +426,10 @@ type counters struct {
 	dataSent       uint64
 	dataRecvd      uint64
 	messagesRecvd  uint64
+}
+
+func (bs *Bitswap) Export() {
+	bs.network.Export()
 }
 
 // GetBlock attempts to retrieve a particular block from peers within the
