@@ -31,6 +31,17 @@ type Loginfo struct {
 	Remotepeer string
 }
 
+type tempLog struct {
+	rpc rpcType
+
+	//Log info
+	blockID    string
+	localpeer  string
+	remotepeer string
+
+	timestamp *timestamppb.Timestamp
+}
+
 type GrpcWorker struct {
 	serverAddress string
 
@@ -62,7 +73,7 @@ func (gw *GrpcWorker) Run(ctx context.Context) {
 
 	// slice of Loginfo to be sent after the execution
 
-	var logs []Loginfo
+	var logs []tempLog
 
 	for {
 		select {
@@ -71,16 +82,16 @@ func (gw *GrpcWorker) Run(ctx context.Context) {
 			switch oper.Rpc {
 			case RpcReceive, RpcWant, RpcBSend:
 
-				logs = append(logs, oper)
+				logs = append(logs, tempLog{rpc: oper.Rpc, blockID: oper.BlockID, localpeer: oper.Localpeer, remotepeer: oper.Remotepeer, timestamp: timestamppb.Now()})
 
 			case RpcSOver:
 				for _, log := range logs {
-					switch log.Rpc {
+					switch log.rpc {
 					case RpcReceive:
 						// Received blocks
 						ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 						defer cancel()
-						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: timestamppb.Now(), BlockRequestedAt: nil, Duplicate: false})
+						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: log.blockID, Localpeer: log.localpeer, Remotepeer: log.remotepeer, SentAt: nil, ReceivedAt: log.timestamp, BlockRequestedAt: nil, Duplicate: false})
 						if err != nil {
 							//log.Fatalf("could not greet: %v", err)
 						}
@@ -89,7 +100,7 @@ func (gw *GrpcWorker) Run(ctx context.Context) {
 						// Want sent
 						ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 						defer cancel()
-						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: nil, ReceivedAt: nil, BlockRequestedAt: timestamppb.Now(), Duplicate: false})
+						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: log.blockID, Localpeer: log.localpeer, Remotepeer: log.remotepeer, SentAt: nil, ReceivedAt: nil, BlockRequestedAt: log.timestamp, Duplicate: false})
 						if err != nil {
 							//log.Fatalf("could not greet: %v", err)
 						}
@@ -97,7 +108,7 @@ func (gw *GrpcWorker) Run(ctx context.Context) {
 						// Block sent
 						ctxdb, cancel := context.WithTimeout(context.Background(), time.Second)
 						defer cancel()
-						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: oper.BlockID, Localpeer: oper.Localpeer, Remotepeer: oper.Remotepeer, SentAt: timestamppb.Now(), ReceivedAt: nil, BlockRequestedAt: nil, Duplicate: false})
+						_, err = c.SendLogs(ctxdb, &pb.Log{BlockID: log.blockID, Localpeer: log.localpeer, Remotepeer: log.remotepeer, SentAt: log.timestamp, ReceivedAt: nil, BlockRequestedAt: nil, Duplicate: false})
 						if err != nil {
 							//log.Fatalf("could not greet: %v", err)
 						}
